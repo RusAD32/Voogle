@@ -33,7 +33,6 @@ func generateCommand(filepath string, res resolution) (string, []string, error) 
 	streamMap := "v:0,a:0"
 
 	args = append(args, sound...)
-	args = append(args, resolutionTarget...)
 	args = append(args, "-c:a", "copy")
 	args = append(args, "-var_stream_map", streamMap)
 	args = append(args, "-master_pl_name", "master.m3u8", "-f", "hls", "-hls_time", "6", "-hls_list_size", "0", "-hls_segment_filename", "v%v/segment%d.ts", "v%v/segment_index.m3u8")
