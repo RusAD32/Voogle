@@ -63,6 +63,8 @@ func NewRouter(config config.Config, clients *Clients, DAOs *DAOs) http.Handler 
 	r.PathPrefix("/swagger").Handler(httpSwagger.WrapHandler)
 
 	r.PathPrefix("/health").Handler(controllers.HealthComponentHandler{}).Methods("GET")
+	r.PathPrefix("/videos/{id}/streams/master.m3u8").Handler(controllers.VideoGetMasterHandler{S3Client: clients.S3Client, UUIDGen: clients.UUIDGen}).Methods("GET")
+	r.PathPrefix("/videos/{id}/streams/{quality}/{filename}").Handler(controllers.VideoGetSubPartHandler{S3Client: clients.S3Client, UUIDGen: clients.UUIDGen, ServiceDiscovery: clients.ServiceDiscovery}).Methods("GET")
 
 	v1 := r.PathPrefix("/api/v1").Subrouter()
 	v1.Use(httpauth.SimpleBasicAuth(config.UserAuth, config.PwdAuth))
