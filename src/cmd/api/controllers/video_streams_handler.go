@@ -59,6 +59,47 @@ func (v VideoGetMasterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	}
 }
 
+type VideoGetSourceHandler struct {
+	S3Client clients.IS3Client
+	UUIDGen  clients.IUUIDGenerator
+}
+
+// VideoGetSourceHandler godoc
+// @Summary Get video master
+// @Description Get video master
+// @Tags video
+// @Produce plain
+// @Param id path string true "Video ID"
+// @Success 200 {string} string "MP4 video source"
+// @Failure 400 {string} string
+// @Failure 404 {string} string
+// @Failure 500 {string} string
+// @Router /api/v1/videos/{id}/streams/source.mp4 [get]
+func (v VideoGetSourceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	log.Debug("GET VideoGetMasterHandler - parameters ", vars)
+
+	id := vars["id"]
+	if !v.UUIDGen.IsValidUUID(id) {
+		log.Error("Invalid id")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	object, err := v.S3Client.GetObject(r.Context(), id+"/source.mp4")
+	if err != nil {
+		log.Error("Failed to open video "+id+"/source.mp4 ", err)
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	if _, err = io.Copy(w, object); err != nil {
+		log.Error("Unable to stream video master", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
 type VideoGetSubPartHandler struct {
 	S3Client         clients.IS3Client
 	UUIDGen          clients.IUUIDGenerator
