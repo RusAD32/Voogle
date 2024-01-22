@@ -2,6 +2,9 @@
   <div class="watchview">
     <h1 class="watchview__title">WATCHING</h1>
     <h2 class="watchview__video-title">{{ this.title }} - {{ this.date }}</h2>
+    <h2 class="watchview__video-title">
+      <a :href="'https://anisurf.site/?id='+ this.id">https://anisurf.site/?id={{ this.id }}</a>
+    </h2>
     <VideoPlayer :videoId="this.id" :filterlist="this.filterlist" />
     <FilterSelector @filterListUpdate="updateList" />
   </div>

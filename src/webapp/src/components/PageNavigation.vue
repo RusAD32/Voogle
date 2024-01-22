@@ -1,24 +1,24 @@
 <template>
   <div v-if="this.withSort">
-    <label for="attribute">Sort by :</label><br />
+    <label for="attribute">Сортировать по:</label><br />
     <select
       name="attribute"
       @change="selectChange($event.target.value, this.ascending, this.status)"
       :value="this.attribute"
     >
-      <option value="title">Title</option>
-      <option value="upload_date">Upload Date</option>
+      <option value="title">Названию</option>
+      <option value="upload_date">Дате загрузки</option>
     </select>
     <select
       name="ascending"
       @change="selectChange(this.attribute, $event.target.value, this.status)"
       :value="this.ascending"
     >
-      <option value="true">Ascending</option>
-      <option value="false">Descending</option>
+      <option value="true">По возрастанию</option>
+      <option value="false">По убыванию</option>
     </select>
     <br />
-    <label for="status">Show :</label><br />
+    <label for="status">Показать в статусе:</label><br />
     <select
       name="status"
       @change="
@@ -26,8 +26,13 @@
       "
       :value="this.status"
     >
-      <option value="Complete">Uploaded</option>
-      <option value="Archive">Archived</option>
+      <option value="Complete">Загружено</option>
+      <option value="Archive">Архив</option>
+      <option value="Uploading">Загружается</option>
+      <option value="Encoding">Обрабатывается</option>
+      <option value="Uploaded">Ожидает обработки</option>
+      <option value="Fail_upload">Ошибка загрузки</option>
+      <option value="Fail_encode">Ошибка обработки</option>
     </select>
   </div>
   <div class="PageNavigation">
