@@ -303,8 +303,8 @@ export default {
     grid-gap: 30px;
     padding: 1em;
   }
-  &__miniature_container {
-    height: 200px;
+  &__miniature-container {
+    height: 265px;
     width: 100%;
     max-width: 250px;
   }
