@@ -1,12 +1,14 @@
 <template>
   <div class="gallery">
-    <h1 class="gallery__title">Gallery</h1>
+    <h1 class="gallery__title">Галлерея</h1>
     <PageNavigation
       :page="this.page"
       :is_last="is_last_page"
       :is_first="is_first_page"
       :attribute="this.attribute"
       :ascending="this.ascending"
+      :page_size="this.limit"
+      :title="this.title"
       :status="this.status"
       :withSort="true"
       @pageChange="pageUpdate"
@@ -77,6 +79,7 @@
           :enable_deletion="this.enable_deletion"
           @refreshResponse="this.refreshPage"
         ></VideoMiniature>
+        <a :href="'https://anisurf.site?id=' + video.id">https://anisurf.site/?id={{ video.id }}</a>
       </div>
     </div>
     <PageNavigation
@@ -85,6 +88,8 @@
       :is_first="is_first_page"
       :attribute="this.attribute"
       :ascending="this.ascending"
+      :page_size="this.limit"
+      :title="this.title"
       :status="this.status"
       :withSort="false"
       @pageChange="pageUpdate"
@@ -112,6 +117,7 @@ export default {
       page: 1,
       last_page: 1,
       limit: 10,
+      title: "",
       status: "Complete",
       first_link: "",
       previous_link: "",
@@ -130,7 +136,7 @@ export default {
       return this.page == 1;
     },
     path: function () {
-      return `api/v1/videos/list/${this.attribute}/${this.ascending}/${this.page}/${this.limit}/${this.status}`;
+      return `api/v1/videos/list/${this.attribute}/${this.ascending}/${this.page}/${this.limit}/${this.status}?title=${this.title}`;
     },
   },
   methods: {
@@ -187,6 +193,8 @@ export default {
       this.enable_unarchive = false;
       this.enable_deletion = false;
       this.page = 1;
+      this.limit = payload.page_size;
+      this.title = payload.title;
       this.update(this.path);
     },
     refreshPage: function (payload) {

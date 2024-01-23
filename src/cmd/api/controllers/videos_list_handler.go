@@ -60,6 +60,7 @@ func (v VideosListHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	page := vars["page"].(int)
 	limit := vars["limit"].(int)
 	status := vars["status"].(models.VideoStatus)
+	title := r.URL.Query().Get("title")
 
 	log.Debug("GET VideosListHandler")
 
@@ -67,7 +68,7 @@ func (v VideosListHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	response := VideoListResponse{}
 
 	//Get videos to be returned
-	videos, err := v.VideosDAO.GetVideos(r.Context(), attribute, order, page, limit, int(status))
+	videos, err := v.VideosDAO.GetVideos(r.Context(), attribute, order, page, limit, int(status), title)
 	if err != nil {
 		log.Error("Unable to list objects from database: ", err)
 		w.WriteHeader(http.StatusInternalServerError)

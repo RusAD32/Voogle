@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 	log "github.com/sirupsen/logrus"
@@ -46,10 +47,10 @@ var VideosRequests = map[VideosRequestName]string{
 	UpdateVideo:             "UPDATE videos SET title = ?, video_status = ?, uploaded_at = ?, source_path = ?, cover_path = ? WHERE id = ?",
 	GetVideo:                "SELECT * FROM videos WHERE id = ?",
 	GetVideoFromTitle:       "SELECT * FROM videos WHERE title = ?",
-	GetVideosTitleAsc:       "SELECT * FROM videos WHERE video_status = ? ORDER BY title ASC LIMIT ?,?",
-	GetVideosTitleDesc:      "SELECT * FROM videos WHERE video_status = ? ORDER BY title DESC LIMIT ?,?",
-	GetVideosUploadedAtAsc:  "SELECT * FROM videos WHERE video_status = ? ORDER BY uploaded_at ASC LIMIT ?,?",
-	GetVideosUploadedAtDesc: "SELECT * FROM videos WHERE video_status = ? ORDER BY uploaded_at DESC LIMIT ?,?",
+	GetVideosTitleAsc:       "SELECT * FROM videos WHERE video_status = ? AND LOWER(title) like ? ORDER BY title ASC LIMIT ?,?",
+	GetVideosTitleDesc:      "SELECT * FROM videos WHERE video_status = ? AND LOWER(title) like ? ORDER BY title DESC LIMIT ?,?",
+	GetVideosUploadedAtAsc:  "SELECT * FROM videos WHERE video_status = ? AND LOWER(title) like ? ORDER BY uploaded_at ASC LIMIT ?,?",
+	GetVideosUploadedAtDesc: "SELECT * FROM videos WHERE video_status = ? AND LOWER(title) like ? ORDER BY uploaded_at DESC LIMIT ?,?",
 	GetTotalVideos:          "SELECT COUNT(*) FROM videos WHERE video_status = ?",
 	DeleteVideo:             "DELETE FROM videos WHERE id = ?",
 }
@@ -328,7 +329,7 @@ func (v VideosDAO) GetVideoFromTitle(ctx context.Context, title string) (*models
 	return &video, nil
 }
 
-func (v VideosDAO) GetVideos(ctx context.Context, attribute interface{}, ascending bool, page, limit, status int) ([]models.Video, error) {
+func (v VideosDAO) GetVideos(ctx context.Context, attribute interface{}, ascending bool, page, limit, status int, title string) ([]models.Video, error) {
 
 	var stmt *sql.Stmt
 	switch attribute {
@@ -359,7 +360,7 @@ func (v VideosDAO) GetVideos(ctx context.Context, attribute interface{}, ascendi
 		return nil, err
 	}
 
-	rows, err := stmt.QueryContext(ctx, status, (page-1)*limit, limit)
+	rows, err := stmt.QueryContext(ctx, status, "%"+strings.ToLower(title)+"%", (page-1)*limit, limit)
 	if err != nil {
 		log.Error("Error, cannot query database : ", err)
 		return nil, err

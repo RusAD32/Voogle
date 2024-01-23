@@ -1,9 +1,9 @@
 <template>
   <div v-if="this.withSort">
-    <label for="attribute">Сортировать по:</label><br />
+    <label for="attribute">Сортировать по: </label>
     <select
       name="attribute"
-      @change="selectChange($event.target.value, this.ascending, this.status)"
+      @change="selectChange($event.target.value, this.ascending, this.page_size, this.status, this.title)"
       :value="this.attribute"
     >
       <option value="title">Названию</option>
@@ -11,18 +11,18 @@
     </select>
     <select
       name="ascending"
-      @change="selectChange(this.attribute, $event.target.value, this.status)"
+      @change="selectChange(this.attribute, $event.target.value, this.page_size, this.status, this.title)"
       :value="this.ascending"
     >
       <option value="true">По возрастанию</option>
       <option value="false">По убыванию</option>
     </select>
     <br />
-    <label for="status">Показать в статусе:</label><br />
+    <label for="status">Показать в статусе: </label>
     <select
       name="status"
       @change="
-        selectChange(this.attribute, this.ascending, $event.target.value)
+        selectChange(this.attribute, this.ascending, this.page_size, $event.target.value, this.title)
       "
       :value="this.status"
     >
@@ -34,6 +34,25 @@
       <option value="Fail_upload">Ошибка загрузки</option>
       <option value="Fail_encode">Ошибка обработки</option>
     </select>
+    <br />
+    <label for="page_size">Количество на странице: </label>
+    <select
+      name="page_size"
+      @change="
+        selectChange(this.attribute, this.ascending, $event.target.value, this.status, this.title)
+      "
+      :value="this.page_size"
+    >
+      <option value="10">10</option>
+      <option value="25">25</option>
+      <option value="50">50</option>
+      <option value="100">100</option>
+    </select>
+    <br/>
+    <label for="title">Название файла: </label>
+    <input name="title" type="text" placeholder="Enter для поиска" @change="
+        selectChange(this.attribute, this.ascending, this.page_size, this.status, $event.target.value)
+    "/>
   </div>
   <div class="PageNavigation">
     <button
@@ -73,21 +92,25 @@ export default {
   name: "PageNavigation",
   props: {
     page: Number,
+    page_size: Number,
     is_last: Boolean,
     is_first: Boolean,
     attribute: String,
     ascending: Boolean,
     status: String,
+    title: String,
     withSort: Boolean,
   },
   emits: ["selectChange", "pageChange"],
   methods: {
-    selectChange: function (attr, asc, stat) {
+    selectChange: function (attr, asc, pg_size, stat, title) {
       asc = asc == "true";
       this.$emit("selectChange", {
         attribute: attr,
         ascending: asc,
+        page_size: pg_size,
         status: stat,
+        title: title,
       });
     },
     pageChange: function (i) {

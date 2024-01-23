@@ -138,8 +138,8 @@ func compressCover(videoData *contracts.Video) error {
 }
 
 func uploadFiles(s3Client clients.IS3Client, data *contracts.Video) error {
-	err := filepath.Walk(".",
-		func(path string, info os.FileInfo, err error) error {
+	err := filepath.WalkDir(".",
+		func(path string, info os.DirEntry, err error) error {
 			if err != nil {
 				return err
 			}
