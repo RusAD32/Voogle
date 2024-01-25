@@ -304,9 +304,12 @@ export default {
     padding: 1em;
   }
   &__miniature-container {
-    height: 265px;
+    height: fit-content;
+    max-height: 300px;
     width: 100%;
     max-width: 250px;
+    overflow-wrap: break-word;
+    hyphens: none;
   }
 }
 </style>
