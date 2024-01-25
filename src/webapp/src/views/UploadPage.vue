@@ -143,7 +143,8 @@ export default {
             Authorization: cookies.get("Authorization"),
           },
         })
-        .then(() => {
+        .then((response) => {
+          this.msg = "https://player.onwavedub.com/?id=" + response["data"]["video"]["id"];
           this.retry();
         })
         .catch((err) => {
