@@ -90,8 +90,12 @@ export default {
   mounted: function () {
     if (this.ws == "") {
       try {
+        var proto = "ws";
+        if (window.location.protocol === "https:") {
+          proto = "wss";
+        }
         this.ws = new WebSocket(
-          `ws://${window.location.hostname}${process.env.VUE_APP_API_WS_PORT}/ws`
+          `${proto}://${window.location.hostname}${process.env.VUE_APP_API_WS_PORT}/ws`
         );
 
         this.ws.onopen = () => {};
