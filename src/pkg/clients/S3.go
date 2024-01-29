@@ -19,7 +19,7 @@ type IS3Client interface {
 	PutObjectInput(ctx context.Context, f io.Reader, path string) error
 	CreateBucketIfDoesNotExists(ctx context.Context, bucketName string) error
 	RemoveObject(ctx context.Context, path string) error
-	GetObjectAndLength(ctx context.Context, key string) (io.Reader, int64, error)
+	GetObjectFull(ctx context.Context, key string) (*s3.GetObjectOutput, error)
 }
 
 var _ IS3Client = s3Client{}
@@ -99,7 +99,7 @@ func (s s3Client) GetObject(ctx context.Context, key string) (io.Reader, error) 
 	return response.Body, nil
 }
 
-func (s s3Client) GetObjectAndLength(ctx context.Context, key string) (io.Reader, int64, error) {
+func (s s3Client) GetObjectFull(ctx context.Context, key string) (*s3.GetObjectOutput, error) {
 	input := &s3.GetObjectInput{
 		Bucket: aws.String(s.bucket),
 		Key:    aws.String(key),
@@ -107,9 +107,9 @@ func (s s3Client) GetObjectAndLength(ctx context.Context, key string) (io.Reader
 
 	response, err := s.awsS3Client.GetObject(ctx, input)
 	if err != nil {
-		return nil, 0, err
+		return nil, err
 	}
-	return response.Body, response.ContentLength, nil
+	return response, nil
 }
 
 func (s s3Client) PutObjectInput(ctx context.Context, fileReader io.Reader, path string) error {

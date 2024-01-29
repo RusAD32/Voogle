@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	"github.com/Sogilis/Voogle/src/cmd/api/db/dao"
 	"github.com/Sogilis/Voogle/src/cmd/api/metrics"
 	"github.com/Sogilis/Voogle/src/pkg/clients"
 	"github.com/Sogilis/Voogle/src/pkg/transformer/v1"
@@ -61,8 +62,9 @@ func (v VideoGetMasterHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 }
 
 type VideoGetSourceHandler struct {
-	S3Client clients.IS3Client
-	UUIDGen  clients.IUUIDGenerator
+	S3Client  clients.IS3Client
+	VideosDAO *dao.VideosDAO
+	UUIDGen   clients.IUUIDGenerator
 }
 
 // VideoGetSourceHandler godoc
@@ -86,16 +88,28 @@ func (v VideoGetSourceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
+	video, err := v.VideosDAO.GetVideo(r.Context(), id)
+	if err != nil {
+		log.Error("Failed to read video details "+id+"/source.mp4 ", err)
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	videoTitle := video.Title
+	if !strings.HasSuffix(videoTitle, ".mp4") {
+		videoTitle += ".mp4"
+	}
 
-	object, length, err := v.S3Client.GetObjectAndLength(r.Context(), id+"/source.mp4")
+	object, err := v.S3Client.GetObjectFull(r.Context(), id+"/source.mp4")
 	if err != nil {
 		log.Error("Failed to open video "+id+"/source.mp4 ", err)
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-	w.Header().Set("Content-Length", fmt.Sprintf("%d", length))
+	w.Header().Set("Content-Length", fmt.Sprintf("%d", object.ContentLength))
+	w.Header().Set("Content-Type", "video/mp4")
+	w.Header().Set("Content-Disposition", "attachment; filename="+videoTitle)
 
-	if _, err = io.Copy(w, object); err != nil {
+	if _, err = io.Copy(w, object.Body); err != nil {
 		log.Error("Unable to stream video master", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return

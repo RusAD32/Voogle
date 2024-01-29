@@ -6,6 +6,8 @@ Voogle is an open source project, maintained by [Sogilis](https://sogilis.com/),
 
 For now, Voogle consists in a micro-service broadcasting and sharing video streams application. It is also used as a demonstration medium for the [SquareScale platform](https://www.squarescale.com/).
 
+This version is modified by RusAD for personal use and doesn't strive to represent best practices
+
 <img src="https://sogilis.com/wp-content/uploads/2021/09/logo_sogilis.svg" width="150"> <img src="https://www.squarescale.com/assets/img/Squarescale_logo_and_name_black.4b1afa0f.svg" width="150">
 
 ## Architecture overview

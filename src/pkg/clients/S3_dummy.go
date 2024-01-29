@@ -2,18 +2,19 @@ package clients
 
 import (
 	"context"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"io"
 )
 
 var _ IS3Client = s3ClientDummy{}
 
 type s3ClientDummy struct {
-	listObjects     func() ([]string, error)
-	getObject       func(id string) (io.Reader, error)
-	getObjectAndLen func(id string) (io.Reader, int64, error)
-	putObjectInput  func(f io.Reader, title string) error
-	createBucket    func(n string) error
-	removeObject    func(id string) error
+	listObjects    func() ([]string, error)
+	getObject      func(id string) (io.Reader, error)
+	getObjectFull  func(id string) (*s3.GetObjectOutput, error)
+	putObjectInput func(f io.Reader, title string) error
+	createBucket   func(n string) error
+	removeObject   func(id string) error
 }
 
 func NewS3ClientDummy(listObjects func() ([]string, error), getObject func(string) (io.Reader, error), putObjectInput func(io.Reader, string) error, createBucket func(n string) error, removeObject func(id string) error) IS3Client {
@@ -28,8 +29,8 @@ func (s s3ClientDummy) GetObject(ctx context.Context, id string) (io.Reader, err
 	return s.getObject(id)
 }
 
-func (s s3ClientDummy) GetObjectAndLength(ctx context.Context, id string) (io.Reader, int64, error) {
-	return s.getObjectAndLen(id)
+func (s s3ClientDummy) GetObjectFull(ctx context.Context, id string) (*s3.GetObjectOutput, error) {
+	return s.getObjectFull(id)
 }
 
 func (s s3ClientDummy) PutObjectInput(ctx context.Context, f io.Reader, title string) error {
