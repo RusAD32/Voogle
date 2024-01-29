@@ -41,6 +41,7 @@ export default {
     enable_archive: Boolean,
     enable_unarchive: Boolean,
     enable_deletion: Boolean,
+    enable_view: Boolean,
   },
   data: function () {
     return {
@@ -52,7 +53,9 @@ export default {
   },
   methods: {
     goToVideo: function () {
-      this.$router.push({ path: `/watch/${this.id}` });
+      if (this.enable_view) {
+        this.$router.push({ path: `/watch/${this.id}` });
+      }
     },
     getCover: function () {
       axios

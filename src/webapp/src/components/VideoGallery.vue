@@ -77,6 +77,7 @@
           :enable_archive="this.enable_archive"
           :enable_unarchive="this.enable_unarchive"
           :enable_deletion="this.enable_deletion"
+          :enable_view="this.status === 'Complete' || this.status === 'Archive'"
           @refreshResponse="this.refreshPage"
         ></VideoMiniature>
         <a :href="'https://player.onwavedub.com/?id=' + video.id">https://player.onwavedub.com/?id={{ video.id }}</a>
@@ -116,7 +117,7 @@ export default {
       ascending: false,
       page: 1,
       last_page: 1,
-      limit: 10,
+      limit: 25,
       title: "",
       status: "Complete",
       first_link: "",
