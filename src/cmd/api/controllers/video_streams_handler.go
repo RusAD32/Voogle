@@ -3,6 +3,7 @@ package controllers
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -86,12 +87,13 @@ func (v VideoGetSourceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	object, err := v.S3Client.GetObject(r.Context(), id+"/source.mp4")
+	object, length, err := v.S3Client.GetObjectAndLength(r.Context(), id+"/source.mp4")
 	if err != nil {
 		log.Error("Failed to open video "+id+"/source.mp4 ", err)
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
+	w.Header().Set("Content-Length", fmt.Sprintf("%d", length))
 
 	if _, err = io.Copy(w, object); err != nil {
 		log.Error("Unable to stream video master", err)
