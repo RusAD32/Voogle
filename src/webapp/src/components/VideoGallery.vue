@@ -80,7 +80,7 @@
           :enable_view="this.status === 'Complete' || this.status === 'Archive'"
           @refreshResponse="this.refreshPage"
         ></VideoMiniature>
-        <a :href="'https://player.onwavedub.com/?id=' + video.id">https://player.onwavedub.com/?id={{ video.id }}</a>
+        <a :href="'https://anisurf.site/?id=' + video.id">https://anisurf.site/?id={{ video.id }}</a>
       </div>
     </div>
     <PageNavigation

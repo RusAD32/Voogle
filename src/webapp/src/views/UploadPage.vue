@@ -148,7 +148,7 @@ export default {
           },
         })
         .then((response) => {
-          this.msg = "https://player.onwavedub.com/?id=" + response["data"]["video"]["id"];
+          this.msg = "https://anisurf.site/?id=" + response["data"]["video"]["id"];
           this.retry();
         })
         .catch((err) => {
