@@ -6,13 +6,14 @@ import (
 	"strings"
 )
 
-type resolution struct {
-	x uint64
-	y uint64
+type Resolution struct {
+	X       uint64
+	Y       uint64
+	Bitrate uint64
 }
 
-func (r resolution) GreaterOrEqualResolution(input resolution) bool {
-	return r.x >= input.x && r.y >= input.y
+func (r Resolution) GreaterOrEqualResolution(input Resolution) bool {
+	return r.X >= input.X && r.Y >= input.Y
 }
 
 func CheckContainsSound(filepath string) (bool, error) {
@@ -25,26 +26,29 @@ func CheckContainsSound(filepath string) (bool, error) {
 	return haveSound, err
 }
 
-// Extract resolution of the video
-func ExtractResolution(filepath string) (resolution, error) {
+// Extract Resolution of the video
+func ExtractResolution(filepath string) (Resolution, error) {
 	// ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 <filepath>
-	rawOutput, err := exec.Command("ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height", "-of", "csv=s=x:p=0", filepath).Output()
+	rawOutput, err := exec.Command("ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height,bit_rate", "-of", "csv=s=x:p=0", filepath).Output()
 	if err != nil {
-		return resolution{}, err
+		return Resolution{}, err
 	}
 	output := string(rawOutput[:])
 
-	//Sometimes, ffprobe return several resolution despite the video only have one video track
-	firstLine := strings.Split(output, "\n")[0] // We get: XRESxYRES
+	//Sometimes, ffprobe return several Resolution despite the video only have one video track
+	firstLine := strings.Trim(strings.Split(output, "\n")[0], "\r") // We get: XRESxYRES
 
 	splitResolution := strings.Split(firstLine, "x")
-	var x, y uint64
+	var x, y, br uint64
 	if x, err = strconv.ParseUint(splitResolution[0], 10, 32); err != nil {
-		return resolution{}, err
+		return Resolution{}, err
 	}
 	if y, err = strconv.ParseUint(splitResolution[1], 10, 32); err != nil {
-		return resolution{}, err
+		return Resolution{}, err
+	}
+	if br, err = strconv.ParseUint(splitResolution[2], 10, 32); err != nil {
+		return Resolution{}, err
 	}
 
-	return resolution{x, y}, nil
+	return Resolution{x, y, br}, nil
 }

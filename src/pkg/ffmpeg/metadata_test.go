@@ -13,43 +13,43 @@ func Test_ExtractResolution(t *testing.T) {
 	cases := []struct {
 		GivenPath        string
 		GivenFilename    string
-		ExpectResolution resolution
+		ExpectResolution Resolution
 		ExpectError      bool
 	}{
 		{
 			GivenPath:        "../../../../samples/", // FIXME(JPR): Root of the project from the test file (We need may need a better way to address these)
 			GivenFilename:    "320x240_testvideo.mp4",
-			ExpectResolution: resolution{320, 240},
+			ExpectResolution: Resolution{320, 240, 0},
 			ExpectError:      false,
 		},
 		{
 			GivenPath:        "../../../../samples/", // FIXME(JPR): Root of the project from the test file (We need may need a better way to address these)
 			GivenFilename:    "960x400_ocean_with_audio.avi",
-			ExpectResolution: resolution{960, 400},
+			ExpectResolution: Resolution{960, 400, 0},
 			ExpectError:      false,
 		},
 		{
 			GivenPath:        "../../../../samples/", // FIXME(JPR): Root of the project from the test file (We need may need a better way to address these)
 			GivenFilename:    "4K-10bit.mkv",
-			ExpectResolution: resolution{3840, 2160},
+			ExpectResolution: Resolution{3840, 2160, 0},
 			ExpectError:      false,
 		},
 		{
 			GivenPath:        "../../../../samples/", // FIXME(JPR): Root of the project from the test file (We need may need a better way to address these)
 			GivenFilename:    "960x400_ocean_with_audio.mkv",
-			ExpectResolution: resolution{960, 400},
+			ExpectResolution: Resolution{960, 400, 0},
 			ExpectError:      false,
 		},
 		{
 			GivenPath:        "../../../../samples/", // FIXME(JPR): Root of the project from the test file (We need may need a better way to address these)
 			GivenFilename:    "1280x720_2mb.mp4",
-			ExpectResolution: resolution{1280, 720},
+			ExpectResolution: Resolution{1280, 720, 0},
 			ExpectError:      false,
 		},
 	}
 
 	for _, tt := range cases {
-		t.Run("Extract resolution from video "+tt.GivenFilename, func(t *testing.T) {
+		t.Run("Extract Resolution from video "+tt.GivenFilename, func(t *testing.T) {
 			res, err := ExtractResolution(tt.GivenPath + tt.GivenFilename)
 			if tt.ExpectError {
 				require.NotNil(t, err)
@@ -57,8 +57,8 @@ func Test_ExtractResolution(t *testing.T) {
 			}
 			require.NoError(t, err)
 
-			require.Equal(t, res.x, tt.ExpectResolution.x)
-			require.Equal(t, res.y, tt.ExpectResolution.y)
+			require.Equal(t, res.X, tt.ExpectResolution.X)
+			require.Equal(t, res.Y, tt.ExpectResolution.Y)
 		})
 	}
 }

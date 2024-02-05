@@ -89,10 +89,11 @@ func fetchVideoSource(s3Client clients.IS3Client, videoData *contracts.Video) er
 func encode(data *contracts.Video) error {
 	sourcefile := filepath.Base(data.GetSource())
 
-	withSound, err := ffmpeg.CheckContainsSound(sourcefile)
-	if err != nil {
-		return err
-	}
+	//withSound, err := ffmpeg.CheckContainsSound(sourcefile)
+	withSound := true
+	//if err != nil {
+	//	return err
+	//}
 	if !withSound {
 		if err := ffmpeg.AddEmptyAudioTrack(sourcefile); err != nil {
 			return err
@@ -143,7 +144,7 @@ func uploadFiles(s3Client clients.IS3Client, data *contracts.Video) error {
 			if err != nil {
 				return err
 			}
-			if path == "." || (!strings.HasSuffix(path, ".ts") && !strings.HasSuffix(path, ".m3u8") && !strings.HasSuffix(path, ".jpeg")) {
+			if path == "." || (!strings.HasSuffix(path, ".ts") && !strings.HasSuffix(path, ".m3u8") && !strings.HasSuffix(path, ".m4s") && !strings.HasSuffix(path, ".mp4") && !strings.HasSuffix(path, ".jpeg")) {
 				log.Debug("Skipping ", path)
 				return nil
 			}
@@ -152,7 +153,7 @@ func uploadFiles(s3Client clients.IS3Client, data *contracts.Video) error {
 				return err
 			}
 			defer func() { _ = f.Close() }()
-			return s3Client.PutObjectInput(context.Background(), f, filepath.Join(data.GetId(), path))
+			return s3Client.PutObjectInput(context.Background(), f, strings.Replace(filepath.Join(data.GetId(), path), "\\", "/", -1))
 		})
 	if err != nil {
 		return err
