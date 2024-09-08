@@ -162,6 +162,7 @@ export default {
     },
     handleFile: function (payload) {
       this.file = payload.file;
+      this.title = payload.file.name;
     },
     handleCover: function (payload) {
       this.cover = payload.file;
