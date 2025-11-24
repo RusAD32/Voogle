@@ -16,6 +16,10 @@ func (r Resolution) GreaterOrEqualResolution(input Resolution) bool {
 	return r.X >= input.X && r.Y >= input.Y
 }
 
+func (r Resolution) GreaterResolution(input Resolution) bool {
+	return r.X > input.X && r.Y > input.Y
+}
+
 func CheckContainsSound(filepath string) (bool, error) {
 	// sh -c "ffmpeg -i <filepath> 2>&1 | grep Audio | awk '{print $0}' | tr -d ,"
 	rawOutput, err := exec.Command("sh", "-c", "ffmpeg -i "+filepath+" 2>&1 | grep Audio | awk '{print $0}' | tr -d ,").CombinedOutput()

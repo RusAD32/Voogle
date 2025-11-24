@@ -30,9 +30,23 @@ func generateCommand(filepath string, res Resolution) (string, []string, error) 
 	command := "ffmpeg"
 	args := []string{"-y", "-i", filepath, "-vcodec", "copy", "-preset", "fast"}
 	sound := []string{"-map", "0:0", "-map", "0:1"}
+	resolutionTarget := []string{"-c:v:0", "copy"}
 	streamMap := "v:0,a:0"
+	if (Resolution{X: 640, Y: 480}).GreaterResolution(res) {
+		sound = append(sound, "-map", "0:0", "-map", "0:1")
+
+		resolutionTarget = append(resolutionTarget, "-s:v:1", "640x480", "-c:v:1", "libx264", "-crf", "23")
+		streamMap += " v:1,a:1"
+	}
+
+	if res.GreaterResolution(Resolution{X: 1920, Y: 1080}) {
+		sound = append(sound, "-map", "0:0", "-map", "0:1")
+		resolutionTarget = append(resolutionTarget, "-s:v:1", "1920x1080", "-c:v:1", "libx264", "-crf", "23")
+		streamMap = streamMap + " v:2,a:2"
+	}
 
 	args = append(args, sound...)
+	args = append(args, resolutionTarget...)
 	args = append(args, "-c:a", "copy")
 	args = append(args, "-var_stream_map", streamMap)
 	args = append(args, "-master_pl_name", "master.m3u8", "-f", "hls", "-hls_time", "6", "-hls_playlist_type", "vod", "-hls_segment_type", "fmp4", "-hls_list_size", "0", "-hls_segment_filename", "v%v/segment%d.m4s", "v%v/segment_index.m3u8")
