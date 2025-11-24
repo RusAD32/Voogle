@@ -50,7 +50,7 @@ func generateCommand(filepath string, res Resolution) (string, []string, error) 
 	args = append(args, "-c:a", "copy")
 	args = append(args, "-var_stream_map", streamMap)
 	args = append(args, "-master_pl_name", "master.m3u8", "-f", "hls", "-hls_time", "6", "-hls_playlist_type", "vod", "-hls_segment_type", "fmp4", "-hls_list_size", "0", "-hls_segment_filename", "v%v/segment%d.m4s", "v%v/segment_index.m3u8")
-
+	log.Info("Generate command: ", command, strings.Join(args, " "))
 	return command, args, nil
 }
 
