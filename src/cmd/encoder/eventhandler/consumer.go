@@ -16,9 +16,9 @@ import (
 
 func ConsumeEvents(amqpClientVideoUpload clients.AmqpClient, s3Client clients.IS3Client) {
 	session := amqpClientVideoUpload.WithRedial()
+	failedToAck := make(map[string]interface{})
 	for {
 		client := <-session
-
 		msgs, err := client.Consume(events.VideoUploaded)
 		if err != nil {
 			log.Error("Failed to consume RabbitMQ client: ", err)
@@ -42,35 +42,37 @@ func ConsumeEvents(amqpClientVideoUpload clients.AmqpClient, s3Client clients.IS
 			log.Debug("New message received: ", video)
 			log.Info("Starting encoding of video with ID ", video.Id)
 
-			err := s3Client.HeadObject(context.Background(), video.Id+"/master.m3u8")
-			if err == nil {
-				log.Info("Video already exists!")
-			} else if err := encoding.Process(s3Client, video); err != nil {
-				log.Error("Failed to processing video ", video.Id, " - ", err)
+			if _, ok := failedToAck[video.Id]; !ok {
+				err := s3Client.HeadObject(context.Background(), video.Id+"/master.m3u8")
+				if err == nil {
+					log.Info("Video already exists!")
+				} else if err := encoding.Process(s3Client, video); err != nil {
+					log.Error("Failed to processing video ", video.Id, " - ", err)
 
-				if err = msg.Acknowledger.Nack(msg.DeliveryTag, false, false); err != nil {
-					log.Error("Failed to Nack message ", video.Id, " - ", err)
+					if err = msg.Acknowledger.Nack(msg.DeliveryTag, false, false); err != nil {
+						log.Error("Failed to Nack message ", video.Id, " - ", err)
+					}
+
+					// Send video status updated : FAIL_ENCODE
+					videoEncoded.Status = contracts.Video_VIDEO_STATUS_FAIL_ENCODE
+					if err = sendUpdatedVideoStatus(videoEncoded, client); err != nil {
+						log.Error("Error while sending new video status : ", err)
+					}
+
+					continue
 				}
+			}
 
-				// Send video status updated : FAIL_ENCODE
+			if err := msg.Acknowledger.Ack(msg.DeliveryTag, false); err != nil {
+				log.Error("Failed to Ack message ", video.Id, " - ", err)
+				failedToAck[video.Id] = err.Error()
+				//Send video status updated : FAIL_ENCODE
 				videoEncoded.Status = contracts.Video_VIDEO_STATUS_FAIL_ENCODE
 				if err = sendUpdatedVideoStatus(videoEncoded, client); err != nil {
 					log.Error("Error while sending new video status : ", err)
 				}
 
 				continue
-			}
-
-			if err := msg.Acknowledger.Ack(msg.DeliveryTag, false); err != nil {
-				log.Error("Failed to Ack message ", video.Id, " - ", err)
-
-				// Send video status updated : FAIL_ENCODE
-				//videoEncoded.Status = contracts.Video_VIDEO_STATUS_FAIL_ENCODE
-				//if err = sendUpdatedVideoStatus(videoEncoded, client); err != nil {
-				//	log.Error("Error while sending new video status : ", err)
-				//}
-				//
-				//continue
 			}
 
 			// Send updates

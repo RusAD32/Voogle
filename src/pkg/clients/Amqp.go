@@ -46,7 +46,6 @@ func NewAmqpClient(user string, pwd string, addr string) (AmqpClient, error) {
 		return amqpC, err
 	}
 	amqpC.connection = conn
-
 	channel, err := conn.Channel()
 	if err != nil {
 		return amqpC, err
