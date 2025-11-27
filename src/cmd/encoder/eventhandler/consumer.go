@@ -61,12 +61,12 @@ func ConsumeEvents(amqpClientVideoUpload clients.AmqpClient, s3Client clients.IS
 				log.Error("Failed to Ack message ", video.Id, " - ", err)
 
 				// Send video status updated : FAIL_ENCODE
-				videoEncoded.Status = contracts.Video_VIDEO_STATUS_FAIL_ENCODE
-				if err = sendUpdatedVideoStatus(videoEncoded, client); err != nil {
-					log.Error("Error while sending new video status : ", err)
-				}
-
-				continue
+				//videoEncoded.Status = contracts.Video_VIDEO_STATUS_FAIL_ENCODE
+				//if err = sendUpdatedVideoStatus(videoEncoded, client); err != nil {
+				//	log.Error("Error while sending new video status : ", err)
+				//}
+				//
+				//continue
 			}
 
 			// Send updates
