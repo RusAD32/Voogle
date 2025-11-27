@@ -36,14 +36,14 @@ func generateCommand(filepath string, res Resolution) (string, []string, error) 
 	if res.GreaterResolution(Resolution{X: 640, Y: 480}) {
 		sound = append(sound, "-map", "0:0", "-map", "0:1")
 		i = 1
-		resolutionTarget = append(resolutionTarget, "-s:v:0", "640x480", "-c:v:0", "libx264", "-b:v:0", "1000k")
+		resolutionTarget = append(resolutionTarget, "-s:v:0", "640x480", "-vf:v:0", "format=yuv420p", "-c:v:0", "libx264", "-crf:v:0", "23")
 		streamMap += " v:1,a:1"
 	}
 
 	if res.GreaterResolution(Resolution{X: 1920, Y: 1080}) {
 		i = 2
 		sound = append(sound, "-map", "0:0", "-map", "0:1")
-		resolutionTarget = append(resolutionTarget, "-s:v:1", "1920x1080", "-c:v:1", "libx264", "-b:v:1", "4000k")
+		resolutionTarget = append(resolutionTarget, "-s:v:1", "1920x1080", "-vf:v:1", "format=yuv420p", "-c:v:1", "libx264", "-crf:v:1", "23")
 		streamMap = streamMap + " v:2,a:2"
 	}
 	resolutionTarget = append(resolutionTarget, fmt.Sprintf("-c:v:%d", i), "copy")
