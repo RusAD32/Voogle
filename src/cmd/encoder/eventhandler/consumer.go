@@ -1,6 +1,7 @@
 package eventhandler
 
 import (
+	"context"
 	"path/filepath"
 
 	log "github.com/sirupsen/logrus"
@@ -41,7 +42,10 @@ func ConsumeEvents(amqpClientVideoUpload clients.AmqpClient, s3Client clients.IS
 			log.Debug("New message received: ", video)
 			log.Info("Starting encoding of video with ID ", video.Id)
 
-			if err := encoding.Process(s3Client, video); err != nil {
+			err := s3Client.HeadObject(context.Background(), video.Id+"/master.m3u8")
+			if err == nil {
+				log.Info("Video already exists!")
+			} else if err := encoding.Process(s3Client, video); err != nil {
 				log.Error("Failed to processing video ", video.Id, " - ", err)
 
 				if err = msg.Acknowledger.Nack(msg.DeliveryTag, false, false); err != nil {
