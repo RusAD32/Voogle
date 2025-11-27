@@ -36,14 +36,14 @@ func generateCommand(filepath string, res Resolution) (string, []string, error) 
 	if res.GreaterResolution(Resolution{X: 640, Y: 480}) {
 		sound = append(sound, "-map", "0:0", "-map", "0:1")
 		i = 1
-		resolutionTarget = append(resolutionTarget, "-s:v:0", "640x480", "-filter:v:0", "\"format=yuv420p\"", "-c:v:0", "libx264", "-crf:v:0", "23")
+		resolutionTarget = append(resolutionTarget, "-s:v:0", "640x480", "-filter:v:0", "format=yuv420p", "-c:v:0", "libx264", "-crf:v:0", "23")
 		streamMap += " v:1,a:1"
 	}
 
 	if res.GreaterResolution(Resolution{X: 1920, Y: 1080}) {
 		i = 2
 		sound = append(sound, "-map", "0:0", "-map", "0:1")
-		resolutionTarget = append(resolutionTarget, "-s:v:1", "1920x1080", "-filter:v:1", "\"format=yuv420p\"", "-c:v:1", "libx264", "-crf:v:1", "23")
+		resolutionTarget = append(resolutionTarget, "-s:v:1", "1920x1080", "-filter:v:1", "format=yuv420p", "-c:v:1", "libx264", "-crf:v:1", "23")
 		streamMap = streamMap + " v:2,a:2"
 	}
 	resolutionTarget = append(resolutionTarget, fmt.Sprintf("-c:v:%d", i), "copy")
@@ -51,9 +51,9 @@ func generateCommand(filepath string, res Resolution) (string, []string, error) 
 	args = append(args, sound...)
 	args = append(args, resolutionTarget...)
 	args = append(args, "-c:a", "copy")
-	args = append(args, "-var_stream_map", "\""+streamMap+"\"")
+	args = append(args, "-var_stream_map", streamMap)
 	args = append(args, "-master_pl_name", "master.m3u8", "-f", "hls", "-hls_time", "6", "-hls_playlist_type", "vod", "-hls_segment_type", "fmp4", "-hls_list_size", "0", "-hls_segment_filename", "v%v/segment%d.m4s", "v%v/segment_index.m3u8")
-	log.Info("Generate command: ", command, strings.Join(args, " "))
+	log.Info("Generate command: ", command, " ", strings.Join(args, " "))
 	return command, args, nil
 }
 
