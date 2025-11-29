@@ -11,14 +11,14 @@
         :refto="'video_file'"
         @sendFile="handleFile"
       />
-      <label class="uploadpage__form-label" for="videocover"
-        >Choose your video cover :
+      <label class="uploadpage__form-label" for="videosubs"
+        >Choose your subtitles :
       </label>
       <UploadBox
-        :title="this.cover.name"
-        :accepting="'image/jpeg, image/png'"
-        :refto="'cover_file'"
-        @sendFile="handleCover"
+        :title="this.subs.name"
+        :accepting="'.ass'"
+        :refto="'subtitle_file'"
+        @sendFile="handleSubtitles"
       />
       <label class="uploadpage__form-label" for="videotitle"
         >Give your video a title :
@@ -73,7 +73,7 @@ export default {
     return {
       title: "",
       file: "",
-      cover: "",
+      subs: "",
       progressArray: [],
       msg: "",
       ws: "",
@@ -133,7 +133,7 @@ export default {
       const formData = new FormData();
       formData.append("title", this.title);
       formData.append("video", this.file);
-      formData.append("cover", this.cover);
+      formData.append("subs", this.subs);
       try {
         this.ws.send(this.title);
       } catch {
@@ -158,14 +158,14 @@ export default {
     retry: function () {
       this.title = "";
       this.file = "";
-      this.cover = "";
+      this.subs = "";
     },
     handleFile: function (payload) {
       this.file = payload.file;
       this.title = payload.file.name;
     },
-    handleCover: function (payload) {
-      this.cover = payload.file;
+    handleSubtitles: function (payload) {
+      this.subs = payload.file;
     },
   },
 };

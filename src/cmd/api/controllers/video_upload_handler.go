@@ -97,6 +97,17 @@ func (v VideoUploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) { 
 			return
 		}
 	}
+	// Fetch cover image. Not mandatory
+	subtitles, subtitileHandler, err := r.FormFile("subs")
+	if err != nil && !errors.Is(err, http.ErrMissingFile) {
+		log.Error("Subtitle file error ", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if subtitles != nil {
+		defer subtitles.Close()
+		//TODO check subtitles are valid
+	}
 
 	// Check if a video with this title already exists
 	video, err := v.VideosDAO.GetVideoFromTitle(r.Context(), title)
@@ -130,6 +141,15 @@ func (v VideoUploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) { 
 	coverPath, err := v.uploadCover(r.Context(), fileCover, videoID, fileHandlerCover)
 	if err != nil {
 		log.Error("Cannot upload cover image : ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Upload subtitles (if file exists) on S3
+	// TODO update database?
+	_, err = v.uploadSubtitles(r.Context(), subtitles, videoID, subtitileHandler)
+	if err != nil {
+		log.Error("Cannot upload subtitles : ", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -235,6 +255,18 @@ func (v VideoUploadHandler) uploadCover(ctx context.Context, cover multipart.Fil
 		}
 	}
 	return coverPath, nil
+}
+
+func (v VideoUploadHandler) uploadSubtitles(ctx context.Context, cover multipart.File, videoID string, fileHandler *multipart.FileHeader) (string, error) {
+	subtitlesPath := ""
+	if cover != nil {
+		subtitlesPath = videoID + "/" + "subs" + filepath.Ext(fileHandler.Filename)
+		if err := v.S3Client.PutObjectInput(ctx, cover, subtitlesPath); err != nil {
+			log.Error("Cannot upload subtitles : ", err)
+			return "", err
+		}
+	}
+	return subtitlesPath, nil
 }
 
 func (v VideoUploadHandler) uploadVideo(ctx context.Context, videoID, title, videoPath, coverPath string, file multipart.File, video *models.Video) (*models.Video, error) {

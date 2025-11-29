@@ -18,6 +18,7 @@ const (
 	CreateTableVideosReq VideosRequestName = iota
 	CreateVideo
 	UpdateVideo
+	UpdateVideoTitle
 	GetVideo
 	GetVideoFromTitle
 	GetVideosTitleAsc
@@ -45,6 +46,7 @@ var VideosRequests = map[VideosRequestName]string{
 
 	CreateVideo:             "INSERT INTO videos (id, title, video_status, source_path, cover_path) VALUES (?, ? , ?, ?, ?)",
 	UpdateVideo:             "UPDATE videos SET title = ?, video_status = ?, uploaded_at = ?, source_path = ?, cover_path = ? WHERE id = ?",
+	UpdateVideoTitle:        "UPDATE videos SET title = ? WHERE id = ?",
 	GetVideo:                "SELECT * FROM videos WHERE id = ?",
 	GetVideoFromTitle:       "SELECT * FROM videos WHERE title = ?",
 	GetVideosTitleAsc:       "SELECT * FROM videos WHERE video_status = ? AND LOWER(title) like ? ORDER BY title ASC LIMIT ?,?",
@@ -59,6 +61,7 @@ type VideosDAO struct {
 	DB                          *sql.DB
 	stmtCreate                  *sql.Stmt
 	stmtUpdate                  *sql.Stmt
+	stmtUpdateTitle             *sql.Stmt
 	stmtGetVideo                *sql.Stmt
 	stmtGetVideoFromTitle       *sql.Stmt
 	stmtGetVideosTitleAsc       *sql.Stmt
@@ -82,6 +85,13 @@ func prepareVideoStmts(ctx context.Context, db *sql.DB) (*VideosDAO, error) {
 
 	// UpdateVideo
 	stmts.stmtUpdate, err = db.PrepareContext(ctx, VideosRequests[UpdateVideo])
+	if err != nil {
+		log.Error("Cannot prepare statement : ", err)
+		return nil, err
+	}
+
+	// UpdateVideoTitle
+	stmts.stmtUpdate, err = db.PrepareContext(ctx, VideosRequests[UpdateVideoTitle])
 	if err != nil {
 		log.Error("Cannot prepare statement : ", err)
 		return nil, err
@@ -259,6 +269,28 @@ func (v VideosDAO) UpdateVideo(ctx context.Context, video *models.Video) error {
 	// Check if one and only one rows has been affected
 	if nbRowAff != 1 {
 		err := fmt.Errorf("wrong number of row affected (%d) while update id : %v in table videos", nbRowAff, video.ID)
+		log.Error(err)
+		return err
+	}
+	return nil
+}
+
+func (v VideosDAO) UpdateVideoTitle(ctx context.Context, ID, title string) error {
+	res, err := v.stmtUpdateTitle.ExecContext(ctx, title, ID)
+	if err != nil {
+		log.Error("Error while update video : ", err)
+		return err
+	}
+
+	nbRowAff, err := res.RowsAffected()
+	if err != nil {
+		log.Error("Error, can't know how many rows affected : ", err)
+		return err
+	}
+
+	// Check if one and only one rows has been affected
+	if nbRowAff != 1 {
+		err := fmt.Errorf("wrong number of row affected (%d) while update id : %v in table videos", nbRowAff, ID)
 		log.Error(err)
 		return err
 	}

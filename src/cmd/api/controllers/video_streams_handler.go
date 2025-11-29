@@ -3,9 +3,13 @@ package controllers
 import (
 	"bytes"
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -266,4 +270,148 @@ func (v VideoGetSubPartHandler) connectClientRPC(clientName string) (transformer
 	}
 
 	return transformer.NewTransformerServiceClient(conn), nil
+}
+
+type VideoGetSubtitlesHandler struct {
+	S3Client         clients.IS3Client
+	UUIDGen          clients.IUUIDGenerator
+	ServiceDiscovery clients.ServiceDiscovery
+}
+
+// VideoGetSubtitlesHandler godoc
+// @Summary Get subtitles for video
+// @Description Get subtitles for video
+// @Tags video, subtitles
+// @Produce plain
+// @Param id path string true "Video ID"
+// @Param filename path string true "Subtitles file nams"
+// @Success 200 {string} string "Video subtitles"
+// @Failure 400 {string} string
+// @Failure 404 {string} string
+// @Failure 500 {string} string
+// @Router /api/v1/videos/{id}/subtitles/{filename} [get]
+func (v VideoGetSubtitlesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	log.Debug("GET VideoGetSubtitlesHandler - Parameters: ", vars)
+
+	id := vars["id"]
+	if !v.UUIDGen.IsValidUUID(id) {
+		log.Error("Invalid id")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	filename := vars["filename"]
+	s3VideoPath := id + "/" + filename
+
+	var err error
+	videoPart, err := v.S3Client.GetObject(r.Context(), s3VideoPath)
+	if err != nil {
+		log.Error("Failed to get video from S3 : ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if _, err := io.Copy(w, videoPart); err != nil {
+		log.Error("Unable to stream subpart", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+}
+
+type VideoEditDataHandler struct {
+	S3Client         clients.IS3Client
+	UUIDGen          clients.IUUIDGenerator
+	ServiceDiscovery clients.ServiceDiscovery
+	VideosDAO        *dao.VideosDAO
+}
+
+// VideoEditDataHandler godoc
+// @Summary Upload subtitles for video
+// @Description Upload subtitles for video
+// @Tags video, subtitles
+// @Accept multipart/form-data
+// @Produce plain
+// @Param id path string true "Video ID"
+// @Success 200 {string} string
+// @Failure 400 {string} string
+// @Failure 404 {string} string
+// @Failure 500 {string} string
+// @Router /api/v1/videos/{id}/subtitles [get]
+func (v VideoEditDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	log.Debug("GET VideoEditDataHandler - Parameters: ", vars)
+
+	// Fetch title
+	title := r.FormValue("title")
+	if title == "" {
+		log.Error("Missing file title ")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	log.Infof("Receive video upload request with title : '%v'", title)
+
+	id := vars["id"]
+	if !v.UUIDGen.IsValidUUID(id) {
+		log.Error("Invalid id")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// Fetch cover image. Not mandatory
+	subtitles, subtitileHandler, err := r.FormFile("subs")
+	if err != nil && !errors.Is(err, http.ErrMissingFile) {
+		log.Error("Subtitle file error ", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if subtitles != nil {
+		defer subtitles.Close()
+		//TODO check subtitles are valid
+	}
+
+	// Upload subtitles (if file exists) on S3
+	// TODO update database?
+	_, err = v.uploadSubtitles(r.Context(), subtitles, id, subtitileHandler)
+	if err != nil {
+		log.Error("Cannot upload subtitles : ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	// Check if a video with this id exists
+	video, err := v.VideosDAO.GetVideo(r.Context(), id)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	if video.Title != title {
+		// Check if a video with this title already exists
+		videoConflict, err := v.VideosDAO.GetVideoFromTitle(r.Context(), title)
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		if videoConflict != nil && videoConflict.ID != id {
+			w.WriteHeader(http.StatusConflict)
+			return
+		}
+		err = v.VideosDAO.UpdateVideoTitle(r.Context(), id, title)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+func (v VideoEditDataHandler) uploadSubtitles(ctx context.Context, cover multipart.File, videoID string, fileHandler *multipart.FileHeader) (string, error) {
+	subtitlesPath := ""
+	if cover != nil {
+		subtitlesPath = videoID + "/" + "subs" + filepath.Ext(fileHandler.Filename)
+		if err := v.S3Client.PutObjectInput(ctx, cover, subtitlesPath); err != nil {
+			log.Error("Cannot upload subtitles : ", err)
+			return "", err
+		}
+	}
+	return subtitlesPath, nil
 }

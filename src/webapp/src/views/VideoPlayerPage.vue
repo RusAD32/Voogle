@@ -7,6 +7,46 @@
     </h2>
     <VideoPlayer :videoId="this.id" :filterlist="this.filterlist" />
     <FilterSelector @filterListUpdate="updateList" />
+    <form class="watchview__form" @submit.prevent="submitFile()">
+    <label class="watchview__form-label" for="videosubs"
+    >Add subtitles for this video:
+    </label>
+    <UploadBox
+      :title="this.subs.name"
+      :accepting="'.ass'"
+      :refto="'subtitle_file'"
+      @sendFile="handleSubtitles"
+    />
+    <label class="watchview__form-label" for="videotitle"
+    >Edit video title :
+    </label>
+    <input
+      class="watchview__form-input"
+      id="videotitle"
+      type="text"
+      placeholder="Enter a Title"
+      v-model="title"
+      required
+    />
+    <span class="watchview__form-buttoncontainer">
+      <button
+        type="submit"
+        class="button is-primary"
+        :disabled="!fileSelected"
+      >
+        <span>Upload</span>
+        <span><i class="fa-solid fa-upload"></i></span>
+      </button>
+      <button
+        class="button is-danger is-outlined"
+        :disabled="!fileSelected"
+        @click.stop.prevent="retry()"
+      >
+        <span>Cancel</span>
+        <span class="icon is-small"> <i class="fa-solid fa-xmark"></i></span>
+      </button>
+    </span>
+    </form>
   </div>
 </template>
 
@@ -15,6 +55,7 @@ import axios from "axios";
 import cookies from "js-cookie";
 import VideoPlayer from "@/components/VideoPlayer.vue";
 import FilterSelector from "@/components/FilterSelector.vue";
+import UploadBox from "@/components/UploadBox.vue";
 
 export default {
   name: "VideoPlayerPage.vue",
@@ -23,8 +64,15 @@ export default {
       id: this.$route.params.id,
       title: "",
       date: "",
+      subs: "",
+      msg: "",
       filterlist: "",
     };
+  },
+  computed: {
+    fileSelected: function () {
+      return !this.subs == "";
+    },
   },
   methods: {
     updateList: function (payload) {
@@ -34,6 +82,34 @@ export default {
       } else {
         this.filterlist = "";
       }
+    },
+    handleSubtitles: function (payload) {
+      this.subs = payload.file;
+    },
+    retry: function () {
+      this.title = "";
+      this.file = "";
+      this.subs = "";
+    },
+    submitFile: function () {
+      // Creating a FormData to POST it as multipart FormData
+      const formData = new FormData();
+      formData.append("title", this.title);
+      formData.append("subs", this.subs);
+      axios
+        .post(process.env.VUE_APP_API_ADDR + "api/v1/videos/" + this.id + "/edit", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: cookies.get("Authorization"),
+          },
+        })
+        .then(() => {
+          this.msg = "Successfully added subtitles";
+          this.retry();
+        })
+        .catch((err) => {
+          this.msg = err;
+        });
     },
   },
   mounted() {
@@ -56,6 +132,7 @@ export default {
   components: {
     VideoPlayer,
     FilterSelector,
+    UploadBox,
   },
 };
 </script>
@@ -77,6 +154,20 @@ export default {
   &__video-title {
     font-size: 1em;
     font-weight: bold;
+  }
+  &__form {
+    padding-top: 1em;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    row-gap: 1em;
+    &-label {
+      font-size: 1.1em;
+    }
+    &-input {
+      padding: 5px 15px;
+    }
   }
 }
 </style>
