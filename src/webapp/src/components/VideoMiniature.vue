@@ -1,7 +1,7 @@
 <template>
   <article @click="goToVideo" class="miniature">
     <figure class="minitature__preview">
-      <img v-bind:src="this.coverSrc" alt="video miniature" />
+      <img v-bind:src="this.cover" alt="video miniature" />
     </figure>
     <div class="miniature__title">{{ this.title }}</div>
     <button
@@ -45,6 +45,7 @@ export default {
   },
   data: function () {
     return {
+      cover: "",
       coverSrc: undefined,
     };
   },
@@ -59,21 +60,21 @@ export default {
     },
     getCover: function () {
       axios
-        .get(process.env.VUE_APP_API_ADDR + this.coverlink["href"], {
+        .head(process.env.VUE_APP_API_ADDR + this.coverlink["href"], {
           headers: {
             Authorization: cookies.get("Authorization"),
           },
         })
         .then((response) => {
-          if (response.data.length > 0) {
-            this.coverSrc = "data:image/jpeg;base64," + response.data;
+          if (response.status == 200) {
+            this.cover = this.coverlink.href;
           } else {
-            this.coverSrc =
+            this.cover =
               "https://sogilis.com/wp-content/uploads/2021/09/logo_sogilis_alone.svg";
           }
         })
         .catch(() => {
-          this.coverSrc =
+           this.cover =
             "https://sogilis.com/wp-content/uploads/2021/09/logo_sogilis_alone.svg";
         });
     },

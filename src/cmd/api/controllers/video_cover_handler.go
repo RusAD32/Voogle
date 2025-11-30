@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	b64 "encoding/base64"
 	"io"
 	"net/http"
 
@@ -58,17 +57,13 @@ func (v VideoCoverHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/octet-stream")
 
-		rawObject, err := io.ReadAll(object)
-		if err != nil {
-			log.Error("Failed to convert to base64 video cover "+video.CoverPath+": ", err)
+		if _, err := io.Copy(w, object); err != nil {
+			log.Error("Unable to stream cover", err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-
-		b64Object := b64.StdEncoding.EncodeToString(rawObject)
-
-		w.Header().Set("Content-Type", "text/plain")
-		_, _ = w.Write([]byte(b64Object))
 	}
 }
