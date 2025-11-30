@@ -80,7 +80,7 @@ func (v VideosListHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		response.Videos = append(response.Videos, VideoInfo{
 			Id:        video.ID,
 			Title:     video.Title,
-			CoverLink: jsonDTO.LinkToLinkJson(models.CreateLink("api/v1/videos/"+video.ID+"/cover", "GET")),
+			CoverLink: jsonDTO.LinkToLinkJson(models.CreateLink("videos/"+video.ID+"/cover", "GET")),
 		})
 	}
 

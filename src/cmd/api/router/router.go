@@ -67,7 +67,7 @@ func NewRouter(config config.Config, clients *Clients, DAOs *DAOs) http.Handler 
 	r.PathPrefix("/videos/{id}/streams/source.mp4").Handler(controllers.VideoGetSourceHandler{S3Client: clients.S3Client, VideosDAO: &DAOs.VideosDAO, UUIDGen: clients.UUIDGen}).Methods("GET")
 	r.PathPrefix("/videos/{id}/streams/{quality}/{filename}").Handler(controllers.VideoGetSubPartHandler{S3Client: clients.S3Client, UUIDGen: clients.UUIDGen, ServiceDiscovery: clients.ServiceDiscovery}).Methods("GET")
 	r.PathPrefix("/videos/{id}/subtitles/{filename}").Handler(controllers.VideoGetSubtitlesHandler{S3Client: clients.S3Client, UUIDGen: clients.UUIDGen, ServiceDiscovery: clients.ServiceDiscovery}).Methods("GET")
-	r.PathPrefix("/videos/{id}/cover").Handler(controllers.VideoCoverHandler{S3Client: clients.S3Client, VideosDAO: &DAOs.VideosDAO, UUIDGen: clients.UUIDGen}).Methods("GET")
+	r.PathPrefix("/videos/{id}/cover").Handler(controllers.VideoCoverHandler{S3Client: clients.S3Client, VideosDAO: &DAOs.VideosDAO, UUIDGen: clients.UUIDGen}).Methods("GET", "HEAD")
 
 	v1 := r.PathPrefix("/api/v1").Subrouter()
 	v1.Use(httpauth.SimpleBasicAuth(config.UserAuth, config.PwdAuth))
