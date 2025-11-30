@@ -360,6 +360,37 @@ func (v VideoEditDataHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Fetch cover image. Not mandatory
+	fileCover, fileHandlerCover, err := r.FormFile("cover")
+	if err != nil && !errors.Is(err, http.ErrMissingFile) {
+		log.Error("File cover error ", err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	if fileCover != nil {
+		defer fileCover.Close()
+
+		// Check if the received file cover is a supported image type
+		if !isSupportedCoverType(fileCover) {
+			w.WriteHeader(http.StatusUnsupportedMediaType)
+			return
+		}
+
+		// Upload cover image (if exists) on S3, update database
+		coverPath, err := v.uploadCover(r.Context(), fileCover, id, fileHandlerCover)
+		if err != nil {
+			log.Error("Cannot upload cover image : ", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		err = v.VideosDAO.UpdateVideoCover(r.Context(), id, coverPath)
+		if err != nil {
+			log.Error("Cannot update video with cover image : ", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// Fetch subtitles. Not mandatory
 	subtitles, subtitileHandler, err := r.FormFile("subs")
 	if err != nil && !errors.Is(err, http.ErrMissingFile) {
 		log.Error("Subtitle file error ", err)
@@ -414,4 +445,16 @@ func (v VideoEditDataHandler) uploadSubtitles(ctx context.Context, cover multipa
 		}
 	}
 	return subtitlesPath, nil
+}
+
+func (v VideoEditDataHandler) uploadCover(ctx context.Context, cover multipart.File, videoID string, fileHandler *multipart.FileHeader) (string, error) {
+	coverPath := ""
+	if cover != nil {
+		coverPath = videoID + "/" + "cover" + filepath.Ext(fileHandler.Filename)
+		if err := v.S3Client.PutObjectInput(ctx, cover, coverPath); err != nil {
+			log.Error("Cannot upload cover : ", err)
+			return "", err
+		}
+	}
+	return coverPath, nil
 }

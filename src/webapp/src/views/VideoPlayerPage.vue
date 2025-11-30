@@ -8,17 +8,32 @@
     <VideoPlayer :videoId="this.id" :filterlist="this.filterlist" />
     <FilterSelector @filterListUpdate="updateList" />
     <form class="watchview__form" @submit.prevent="submitFile()">
-    <label class="watchview__form-label" for="videosubs"
-    >Add subtitles for this video:
-    </label>
-    <UploadBox
-      :title="this.subs.name"
-      :accepting="'.ass'"
-      :refto="'subtitle_file'"
-      @sendFile="handleSubtitles"
-    />
+      <div class="watchview__additional-boxes">
+        <div>
+          <label class="watchview__form-label" for="videosubs"
+          >Выберите субтитры:
+          </label>
+          <UploadBox
+            :title="this.subs.name"
+            :accepting="'.ass'"
+            :refto="'subtitle_file'"
+            @sendFile="handleSubtitles"
+          />
+        </div>
+        <div>
+          <label class="watchview__form-label" for="videocover"
+          >Выберите обложку:
+          </label>
+          <UploadBox
+            :title="this.cover.name"
+            :accepting="'image/jpeg, image/png'"
+            :refto="'cover_file'"
+            @sendFile="handleCover"
+          />
+        </div>
+      </div>
     <label class="watchview__form-label" for="videotitle"
-    >Edit video title :
+    >Изменить название видео:
     </label>
     <input
       class="watchview__form-input"
@@ -34,7 +49,7 @@
         class="button is-primary"
         :disabled="!fileSelected"
       >
-        <span>Upload</span>
+        <span>Загрузить</span>
         <span><i class="fa-solid fa-upload"></i></span>
       </button>
       <button
@@ -42,7 +57,7 @@
         :disabled="!fileSelected"
         @click.stop.prevent="retry()"
       >
-        <span>Cancel</span>
+        <span>Отмена</span>
         <span class="icon is-small"> <i class="fa-solid fa-xmark"></i></span>
       </button>
     </span>
@@ -63,6 +78,7 @@ export default {
     return {
       id: this.$route.params.id,
       title: "",
+      cover: "",
       date: "",
       subs: "",
       msg: "",
@@ -86,6 +102,9 @@ export default {
     handleSubtitles: function (payload) {
       this.subs = payload.file;
     },
+    handleCover: function (payload) {
+      this.cover = payload.file;
+    },
     retry: function () {
       this.title = "";
       this.file = "";
@@ -96,6 +115,7 @@ export default {
       const formData = new FormData();
       formData.append("title", this.title);
       formData.append("subs", this.subs);
+      formData.append("cover", this.cover);
       axios
         .post(process.env.VUE_APP_API_ADDR + "api/v1/videos/" + this.id + "/edit", formData, {
           headers: {
@@ -168,6 +188,11 @@ export default {
     &-input {
       padding: 5px 15px;
     }
+  }
+
+  &__additional-boxes {
+    display: flex;
+    gap: 2rem;
   }
 }
 </style>

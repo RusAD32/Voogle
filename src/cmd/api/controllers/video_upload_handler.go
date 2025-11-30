@@ -97,7 +97,7 @@ func (v VideoUploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) { 
 			return
 		}
 	}
-	// Fetch cover image. Not mandatory
+	// Fetch subtitles.
 	subtitles, subtitileHandler, err := r.FormFile("subs")
 	if err != nil && !errors.Is(err, http.ErrMissingFile) {
 		log.Error("Subtitle file error ", err)

@@ -3,7 +3,7 @@
     <h2 class="uploadpage__title">UPLOAD</h2>
     <form class="uploadpage__form" @submit.prevent="submitFile()">
       <label class="uploadpage__form-label" for="videofile"
-        >Choose your video file :
+        >Выберите файл с видео:
       </label>
       <UploadBox
         :title="this.file.name"
@@ -11,8 +11,10 @@
         :refto="'video_file'"
         @sendFile="handleFile"
       />
+      <div class="uploadpage__additional-boxes">
+        <div>
       <label class="uploadpage__form-label" for="videosubs"
-        >Choose your subtitles :
+        >Выберите субтитры:
       </label>
       <UploadBox
         :title="this.subs.name"
@@ -20,8 +22,21 @@
         :refto="'subtitle_file'"
         @sendFile="handleSubtitles"
       />
+        </div>
+        <div>
+      <label class="uploadpage__form-label" for="videocover"
+      >Выберите обложку:
+      </label>
+      <UploadBox
+        :title="this.cover.name"
+        :accepting="'image/jpeg, image/png'"
+        :refto="'cover_file'"
+        @sendFile="handleCover"
+      />
+        </div>
+      </div>
       <label class="uploadpage__form-label" for="videotitle"
-        >Give your video a title :
+        >Введите название видео:
       </label>
       <input
         class="uploadpage__form-input"
@@ -37,7 +52,7 @@
           class="button is-primary"
           :disabled="!fileSelected"
         >
-          <span>Upload</span>
+          <span>Загрузить</span>
           <span><i class="fa-solid fa-upload"></i></span>
         </button>
         <button
@@ -45,7 +60,7 @@
           :disabled="!fileSelected"
           @click.stop.prevent="retry()"
         >
-          <span>Cancel</span>
+          <span>Отмена</span>
           <span class="icon is-small"> <i class="fa-solid fa-xmark"></i></span>
         </button>
       </span>
@@ -74,6 +89,7 @@ export default {
       title: "",
       file: "",
       subs: "",
+      cover: "",
       progressArray: [],
       msg: "",
       ws: "",
@@ -133,6 +149,7 @@ export default {
       const formData = new FormData();
       formData.append("title", this.title);
       formData.append("video", this.file);
+      formData.append("cover", this.cover);
       formData.append("subs", this.subs);
       try {
         this.ws.send(this.title);
@@ -167,6 +184,9 @@ export default {
     handleSubtitles: function (payload) {
       this.subs = payload.file;
     },
+    handleCover: function (payload) {
+      this.cover = payload.file;
+    },
   },
 };
 </script>
@@ -192,6 +212,10 @@ export default {
     &-input {
       padding: 5px 15px;
     }
+  }
+  &__additional-boxes {
+    display: flex;
+    gap: 2rem;
   }
 }
 
