@@ -50,6 +50,10 @@ func (v VideoCoverHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// If there is no cover file, return nothing, but no error
 	if video.CoverPath != "" {
+		if r.Method == "head" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
 		// Fetch cover image from S3
 		object, err := v.S3Client.GetObject(r.Context(), video.CoverPath)
 		if err != nil {
@@ -66,4 +70,5 @@ func (v VideoCoverHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+	w.WriteHeader(http.StatusNotFound)
 }

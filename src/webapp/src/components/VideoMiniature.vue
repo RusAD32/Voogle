@@ -60,14 +60,14 @@ export default {
     },
     getCover: function () {
       axios
-        .head(process.env.VUE_APP_API_ADDR + this.coverlink["href"], {
+        .head(process.env.VUE_APP_API_ADDR + this.coverlink.href, {
           headers: {
             Authorization: cookies.get("Authorization"),
           },
         })
         .then((response) => {
           if (response.status == 200) {
-            this.cover = this.coverlink.href;
+            this.cover = process.env.VUE_APP_API_ADDR + this.coverlink.href;
           } else {
             this.cover =
               "https://sogilis.com/wp-content/uploads/2021/09/logo_sogilis_alone.svg";
