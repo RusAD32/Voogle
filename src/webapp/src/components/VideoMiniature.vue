@@ -3,7 +3,7 @@
     <figure class="minitature__preview">
       <img v-bind:src="this.cover" alt="video miniature" />
     </figure>
-    <div class="miniature__title">{{ this.title }}</div>
+    <div class="miniature__title"><a :href="'/watch/' + this.id">{{ this.title }}</a></div>
     <button
       class="miniature__archive-button"
       @click.stop="this.archive()"
