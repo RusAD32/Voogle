@@ -67,6 +67,7 @@ func NewRouter(config config.Config, clients *Clients, DAOs *DAOs) http.Handler 
 	r.PathPrefix("/videos/{id}/streams/source.mp4").Handler(controllers.VideoGetSourceHandler{S3Client: clients.S3Client, VideosDAO: &DAOs.VideosDAO, UUIDGen: clients.UUIDGen}).Methods("GET")
 	r.PathPrefix("/videos/{id}/streams/{quality}/{filename}").Handler(controllers.VideoGetSubPartHandler{S3Client: clients.S3Client, UUIDGen: clients.UUIDGen, ServiceDiscovery: clients.ServiceDiscovery}).Methods("GET")
 	r.PathPrefix("/videos/{id}/subtitles/{filename}").Handler(controllers.VideoGetSubtitlesHandler{S3Client: clients.S3Client, UUIDGen: clients.UUIDGen, ServiceDiscovery: clients.ServiceDiscovery}).Methods("GET")
+	r.PathPrefix("/videos/{id}/cover").Handler(controllers.VideoCoverHandler{S3Client: clients.S3Client, VideosDAO: &DAOs.VideosDAO, UUIDGen: clients.UUIDGen}).Methods("GET")
 
 	v1 := r.PathPrefix("/api/v1").Subrouter()
 	v1.Use(httpauth.SimpleBasicAuth(config.UserAuth, config.PwdAuth))
@@ -75,7 +76,6 @@ func NewRouter(config config.Config, clients *Clients, DAOs *DAOs) http.Handler 
 	v1.PathPrefix("/videos/{id}/streams/{quality}/{filename}").Handler(controllers.VideoGetSubPartHandler{S3Client: clients.S3Client, UUIDGen: clients.UUIDGen, ServiceDiscovery: clients.ServiceDiscovery}).Methods("GET")
 	v1.PathPrefix("/videos/{id}/edit").Handler(controllers.VideoEditDataHandler{S3Client: clients.S3Client, UUIDGen: clients.UUIDGen, ServiceDiscovery: clients.ServiceDiscovery, VideosDAO: &DAOs.VideosDAO}).Methods("POST")
 	v1.PathPrefix("/videos/transformer/list").Handler(controllers.VideoTransformerListHandler{ServiceDiscovery: clients.ServiceDiscovery}).Methods("GET")
-	v1.PathPrefix("/videos/{id}/cover").Handler(controllers.VideoCoverHandler{S3Client: clients.S3Client, VideosDAO: &DAOs.VideosDAO, UUIDGen: clients.UUIDGen}).Methods("GET")
 	v1.PathPrefix("/videos/list/{attribute}/{order}/{page}/{limit}/{status}").Handler(controllers.VideosListHandler{VideosDAO: &DAOs.VideosDAO}).Methods("GET")
 	v1.PathPrefix("/videos/{id}/delete").Handler(controllers.VideoDeleteHandler{S3Client: clients.S3Client, VideosDAO: &DAOs.VideosDAO, UploadsDAO: &DAOs.UploadsDAO, UUIDGen: clients.UUIDGen}).Methods("DELETE")
 	v1.PathPrefix("/videos/{id}/archive").Handler(controllers.VideoArchiveHandler{VideosDAO: &DAOs.VideosDAO, UUIDGen: clients.UUIDGen}).Methods("PUT")
