@@ -52,6 +52,9 @@ export default {
   mounted() {
     this.getCover();
   },
+  updated() {
+    this.getCover();
+  },
   methods: {
     goToVideo: function () {
       if (this.enable_view) {
