@@ -47,14 +47,12 @@
       <button
         type="submit"
         class="button is-primary"
-        :disabled="!fileSelected"
       >
         <span>Загрузить</span>
         <span><i class="fa-solid fa-upload"></i></span>
       </button>
       <button
         class="button is-danger is-outlined"
-        :disabled="!fileSelected"
         @click.stop.prevent="retry()"
       >
         <span>Отмена</span>
