@@ -103,7 +103,8 @@ func (v VideosListHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		mux.Vars(r)["attribute"] + "/" +
 		mux.Vars(r)["order"] + "/%v/" +
 		mux.Vars(r)["limit"] + "/" +
-		mux.Vars(r)["status"]
+		mux.Vars(r)["status"] + "?title=" +
+		r.URL.Query().Get("title")
 
 	firstpath := fmt.Sprintf(path, 1)
 	response.Links["first"] = jsonDTO.LinkToLinkJson(models.CreateLink(firstpath, "GET"))
