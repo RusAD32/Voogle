@@ -179,8 +179,8 @@ func (v VideoGetSubPartHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 				metrics.CounterVideoTransformFlip.Inc()
 			}
 		}
-
-		videoPart, err := v.getVideoPart(r.Context(), s3VideoPath, transformers)
+		_range := r.Header.Get("Range")
+		videoPart, err := v.getVideoPart(r.Context(), s3VideoPath, _range, transformers)
 		if err != nil {
 			log.Error("Cannot get video part : ", err)
 			w.WriteHeader(http.StatusInternalServerError)
@@ -195,11 +195,16 @@ func (v VideoGetSubPartHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 	}
 }
 
-func (v VideoGetSubPartHandler) getVideoPart(ctx context.Context, s3VideoPath string, transformers []string) (io.Reader, error) {
+func (v VideoGetSubPartHandler) getVideoPart(ctx context.Context, s3VideoPath, rangeBytes string, transformers []string) (io.Reader, error) {
 	if len(transformers) == 0 {
 		// Retrieve the video part from aws S3
 		var err error
-		videoPart, err := v.S3Client.GetObject(ctx, s3VideoPath)
+		var videoPart io.Reader
+		if rangeBytes != "" {
+			videoPart, err = v.S3Client.GetObjectRange(ctx, s3VideoPath, rangeBytes)
+		} else {
+			videoPart, err = v.S3Client.GetObject(ctx, s3VideoPath)
+		}
 		if err != nil {
 			log.Error("Failed to get video from S3 : ", err)
 			return nil, err
