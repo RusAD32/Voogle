@@ -103,8 +103,16 @@ func (v VideoGetSourceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	if !strings.HasSuffix(videoTitle, ".mp4") {
 		videoTitle += ".mp4"
 	}
+	_range := r.Header.Get("Range")
+	var object *s3.GetObjectOutput
+	if _range == "" {
+		object, err = v.S3Client.GetObjectFull(r.Context(), id+"/source.mp4")
+	} else {
 
-	object, err := v.S3Client.GetObjectFull(r.Context(), id+"/source.mp4")
+		object, err = v.S3Client.GetObjectRange(r.Context(), id+"/source.mp4", _range)
+
+	}
+
 	if err != nil {
 		log.Error("Failed to open video "+id+"/source.mp4 ", err)
 		w.WriteHeader(http.StatusNotFound)
@@ -112,12 +120,26 @@ func (v VideoGetSourceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	}
 	w.Header().Set("Content-Length", fmt.Sprintf("%d", object.ContentLength))
 	w.Header().Set("Content-Type", "video/mp4")
-	w.Header().Set("Content-Disposition", "attachment; filename="+videoTitle)
-
-	if _, err = io.Copy(w, object.Body); err != nil {
+	if _range != "" {
+		w.Header().Set("Content-Length", fmt.Sprintf("%d", object.ContentLength))
+		if object.ContentRange != nil {
+			w.Header().Set("Content-Range", *object.ContentRange)
+		}
+		if object.AcceptRanges != nil {
+			w.Header().Set("Accept-Ranges", *object.AcceptRanges)
+		}
+		w.WriteHeader(http.StatusPartialContent)
+	} else {
+		w.Header().Set("Content-Disposition", "attachment; filename="+videoTitle)
+	}
+	var n int64
+	if n, err = io.Copy(w, object.Body); err != nil {
+		fmt.Println(n)
 		log.Error("Unable to stream video master", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
+	} else {
+		fmt.Println(n)
 	}
 }
 
@@ -187,9 +209,6 @@ func (v VideoGetSubPartHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		if _range != "" {
-			w.WriteHeader(http.StatusPartialContent)
-		}
 
 		if _, err := io.Copy(w, videoPart); err != nil {
 			log.Error("Unable to stream subpart", err)
@@ -214,8 +233,12 @@ func (v VideoGetSubPartHandler) getVideoPart(ctx context.Context, s3VideoPath, r
 			videoPart = video.Body
 			w.WriteHeader(http.StatusPartialContent)
 			w.Header().Set("Content-Length", fmt.Sprintf("%d", video.ContentLength))
-			w.Header().Set("Content-Range", fmt.Sprintf("%d", video.ContentRange))
-			w.Header().Set("Accept-Ranges", fmt.Sprintf("%d", video.AcceptRanges))
+			if video.ContentRange != nil {
+				w.Header().Set("Content-Range", *video.ContentRange)
+			}
+			if video.AcceptRanges != nil {
+				w.Header().Set("Accept-Ranges", *video.AcceptRanges)
+			}
 		} else {
 			videoPart, err = v.S3Client.GetObject(ctx, s3VideoPath)
 		}
