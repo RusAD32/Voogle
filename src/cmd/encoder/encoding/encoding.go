@@ -45,21 +45,6 @@ func Process(s3Client clients.IS3Client, videoData *contracts.Video) error {
 		return err
 	}
 
-	// Download and write the cover file on the filesystem
-	isCoverFetch, err := fetchCoverSource(s3Client, videoData)
-	if err != nil {
-		log.Error("Failed to fetch cover image")
-		return err
-	}
-
-	// Cover image compression
-	if isCoverFetch {
-		if err = compressCover(videoData); err != nil {
-			log.Error("Failed to compress cover image")
-			return err
-		}
-	}
-
 	log.Info("Processing of video ", videoData.GetId(), "done - Uploading to S3")
 	// Uploading files to the S3
 	err = uploadFiles(s3Client, videoData)
@@ -128,14 +113,6 @@ func fetchCoverSource(s3Client clients.IS3Client, videoData *contracts.Video) (i
 		return true, err
 	}
 	return true, f.Close()
-}
-
-func compressCover(videoData *contracts.Video) error {
-	err := ffmpeg.ConvertImg(filepath.Base(videoData.GetCoverPath()), "cover.jpeg")
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func uploadFiles(s3Client clients.IS3Client, data *contracts.Video) error {

@@ -2,7 +2,6 @@ package eventhandler
 
 import (
 	"context"
-	"path/filepath"
 
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
@@ -78,10 +77,6 @@ func ConsumeEvents(amqpClientVideoUpload clients.AmqpClient, s3Client clients.IS
 			// Send updates
 			// Update video status to COMPLETE
 			videoEncoded.Status = contracts.Video_VIDEO_STATUS_COMPLETE
-			// Update video cover path
-			if len(videoEncoded.CoverPath) > 0 && filepath.Ext(videoEncoded.CoverPath) != ".jpeg" {
-				videoEncoded.CoverPath = videoEncoded.Id + "/cover.jpeg"
-			}
 			if err := sendUpdatedVideoStatus(videoEncoded, client); err != nil {
 				log.Error("Error while sending new video status : ", err)
 				continue
