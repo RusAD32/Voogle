@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gorilla/mux"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -186,6 +187,9 @@ func (v VideoGetSubPartHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+		if _range != "" {
+			w.WriteHeader(http.StatusPartialContent)
+		}
 
 		if _, err := io.Copy(w, videoPart); err != nil {
 			log.Error("Unable to stream subpart", err)
@@ -195,13 +199,23 @@ func (v VideoGetSubPartHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 	}
 }
 
-func (v VideoGetSubPartHandler) getVideoPart(ctx context.Context, s3VideoPath, rangeBytes string, transformers []string) (io.Reader, error) {
+func (v VideoGetSubPartHandler) getVideoPart(ctx context.Context, s3VideoPath, rangeBytes string, transformers []string, w http.ResponseWriter) (io.Reader, error) {
 	if len(transformers) == 0 {
 		// Retrieve the video part from aws S3
 		var err error
 		var videoPart io.Reader
 		if rangeBytes != "" {
-			videoPart, err = v.S3Client.GetObjectRange(ctx, s3VideoPath, rangeBytes)
+			var video *s3.GetObjectOutput
+			video, err = v.S3Client.GetObjectRange(ctx, s3VideoPath, rangeBytes)
+			if err != nil {
+				log.Error("Failed to get video from S3 : ", err)
+				return nil, err
+			}
+			videoPart = video.Body
+			w.WriteHeader(http.StatusPartialContent)
+			w.Header().Set("Content-Length", fmt.Sprintf("%d", video.ContentLength))
+			w.Header().Set("Content-Range", fmt.Sprintf("%d", video.ContentRange))
+			w.Header().Set("Accept-Ranges", fmt.Sprintf("%d", video.AcceptRanges))
 		} else {
 			videoPart, err = v.S3Client.GetObject(ctx, s3VideoPath)
 		}

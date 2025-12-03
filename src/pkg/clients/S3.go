@@ -16,7 +16,7 @@ import (
 type IS3Client interface {
 	ListObjects(ctx context.Context) ([]string, error)
 	GetObject(ctx context.Context, key string) (io.Reader, error)
-	GetObjectRange(ctx context.Context, key string, rangeBytes string) (io.Reader, error)
+	GetObjectRange(ctx context.Context, key string, rangeBytes string) (*s3.GetObjectOutput, error)
 	PutObjectInput(ctx context.Context, f io.Reader, path string) error
 	CreateBucketIfDoesNotExists(ctx context.Context, bucketName string) error
 	RemoveObject(ctx context.Context, path string) error
@@ -101,7 +101,7 @@ func (s s3Client) GetObject(ctx context.Context, key string) (io.Reader, error) 
 	return response.Body, nil
 }
 
-func (s s3Client) GetObjectRange(ctx context.Context, key string, rangeBytes string) (io.Reader, error) {
+func (s s3Client) GetObjectRange(ctx context.Context, key string, rangeBytes string) (*s3.GetObjectOutput, error) {
 	input := &s3.GetObjectInput{
 		Bucket: aws.String(s.bucket),
 		Key:    aws.String(key),
@@ -112,7 +112,7 @@ func (s s3Client) GetObjectRange(ctx context.Context, key string, rangeBytes str
 	if err != nil {
 		return nil, err
 	}
-	return response.Body, nil
+	return response, nil
 }
 
 func (s s3Client) HeadObject(ctx context.Context, key string) error {

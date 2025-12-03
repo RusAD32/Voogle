@@ -30,8 +30,8 @@ func (s s3ClientDummy) ListObjects(ctx context.Context) ([]string, error) {
 func (s s3ClientDummy) GetObject(ctx context.Context, id string) (io.Reader, error) {
 	return s.getObject(id)
 }
-func (s s3ClientDummy) GetObjectRange(ctx context.Context, id string, rangeBytes string) (io.Reader, error) {
-	return s.getObject(id)
+func (s s3ClientDummy) GetObjectRange(ctx context.Context, id string, rangeBytes string) (*s3.GetObjectOutput, error) {
+	return nil, nil
 }
 
 func (s s3ClientDummy) GetObjectFull(ctx context.Context, id string) (*s3.GetObjectOutput, error) {
