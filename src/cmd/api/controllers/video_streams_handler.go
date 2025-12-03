@@ -132,14 +132,10 @@ func (v VideoGetSourceHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	} else {
 		w.Header().Set("Content-Disposition", "attachment; filename="+videoTitle)
 	}
-	var n int64
-	if n, err = io.Copy(w, object.Body); err != nil {
-		fmt.Println(n)
+	if _, err = io.Copy(w, object.Body); err != nil {
 		log.Error("Unable to stream video master", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
-	} else {
-		fmt.Println(n)
 	}
 }
 
