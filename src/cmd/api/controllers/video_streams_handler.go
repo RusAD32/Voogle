@@ -181,7 +181,7 @@ func (v VideoGetSubPartHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 			}
 		}
 		_range := r.Header.Get("Range")
-		videoPart, err := v.getVideoPart(r.Context(), s3VideoPath, _range, transformers)
+		videoPart, err := v.getVideoPart(r.Context(), s3VideoPath, _range, transformers, w)
 		if err != nil {
 			log.Error("Cannot get video part : ", err)
 			w.WriteHeader(http.StatusInternalServerError)
